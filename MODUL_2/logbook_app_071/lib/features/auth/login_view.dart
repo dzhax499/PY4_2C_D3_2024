@@ -41,9 +41,8 @@ class _LoginViewState extends State<LoginView> {
         ),
       );
       
-      // Jika terkunci, refresh UI untuk disable tombol (opsional, tapi bagus untuk UX)
       if (_controller.isLocked) {
-        setState(() {}); // Refresh UI
+        setState(() {}); 
       }
     }
   }
@@ -51,24 +50,42 @@ class _LoginViewState extends State<LoginView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Login Gatekeeper")),
+      backgroundColor: Colors.grey[200], 
+      appBar: AppBar(
+        title: const Text("Login Gatekeeper"),
+        backgroundColor: Colors.grey[400], 
+        centerTitle: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            bottom: Radius.circular(30),
+          ),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center, 
           children: [
             TextField(
               controller: _userController,
-              decoration: const InputDecoration(labelText: "Username"),
+              decoration: const InputDecoration(
+                labelText: "Username",
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+              ),
             ),
             TextField(
               controller: _passController,
-              obscureText: !_isPasswordVisible, // Gunakan state
+              obscureText: !_isPasswordVisible,
               decoration: InputDecoration(
                 labelText: "Password",
-                // Ikon Mata (Show/Hide)
+                filled: true,
+                fillColor: Colors.white,
+                border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                    _isPasswordVisible ? Icons.visibility : Icons.visibility_off,color: Colors.black,
                   ),
                   onPressed: () {
                     setState(() {
@@ -79,10 +96,24 @@ class _LoginViewState extends State<LoginView> {
               ),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              // Disable tombol jika terkunci
-              onPressed: _controller.isLocked ? null : _handleLogin, 
-              child: Text(_controller.isLocked ? "Terkunci (Wait 10s)" : "Masuk"),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _controller.isLocked ? null : _handleLogin,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  elevation: 5,
+                ),
+                child: Text(
+                  _controller.isLocked ? "Terkunci (Wait 10s)" : "Masuk",
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
             ),
           ],
         ),
