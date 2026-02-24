@@ -28,41 +28,23 @@ class _OnboardingViewState extends State<OnboardingView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[200],
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF000000),
+        elevation: 2,
+        title: Text(
+          "Onboarding",
+          style: GoogleFonts.oswald(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFFF5C400),
+            letterSpacing: 1.2,
+          ),
+        ),
+      ),
+      backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
         child: Column(
           children: [
-            // Custom AppBar
-            Container(
-              margin: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-              height: 50,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.yellow.shade700, Colors.orange],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  "Onboarding",
-                  style: GoogleFonts.oswald(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ),
-            ),
             // Main Content
             Expanded(
               child: Padding(
@@ -123,7 +105,9 @@ class _OnboardingViewState extends State<OnboardingView> {
                           width: _step == index + 1 ? 24 : 8,
                           height: 8,
                           decoration: BoxDecoration(
-                            color: _step == index + 1 ? Colors.indigo : Colors.indigo.shade100,
+                            color: _step == index + 1
+                      ? const Color(0xFFF5C400)  // kuning aktif
+                      : Colors.grey.shade300,     // abu pasif
                             borderRadius: BorderRadius.circular(4),
                           ),
                         );
@@ -139,8 +123,8 @@ class _OnboardingViewState extends State<OnboardingView> {
                         child: ElevatedButton(
                           onPressed: _nextStep,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black, // Warna Hitam
-                            foregroundColor: Colors.white, // Teks Putih
+                            backgroundColor: Colors.black,
+                            foregroundColor: const Color(0xFFF5C400), // kuning
                             elevation: 5,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(30), // Sudut Tumpul (Bulat)

@@ -50,16 +50,14 @@ class _LoginViewState extends State<LoginView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[200], 
+      backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: const Text("Login Gatekeeper"),
-        backgroundColor: Colors.grey[400], 
-        centerTitle: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(30),
-          ),
+        title: const Text(
+          "Login Gatekeeper",
+          style: TextStyle(color: Color(0xFFF5C400), fontWeight: FontWeight.bold),
         ),
+        backgroundColor: const Color(0xFF000000),
+        elevation: 2,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -70,11 +68,13 @@ class _LoginViewState extends State<LoginView> {
               controller: _userController,
               decoration: const InputDecoration(
                 labelText: "Username",
+                prefixIcon: Icon(Icons.person_outline),
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
               ),
             ),
+            const SizedBox(height: 12),
             TextField(
               controller: _passController,
               obscureText: !_isPasswordVisible,
@@ -103,7 +103,7 @@ class _LoginViewState extends State<LoginView> {
                 onPressed: _controller.isLocked ? null : _handleLogin,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
+                  foregroundColor: const Color(0xFFF5C400),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
