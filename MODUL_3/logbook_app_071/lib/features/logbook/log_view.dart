@@ -144,39 +144,69 @@ class _LogViewState extends State<LogView> {
       ),
       // Daftar catatan menggunakan ValueListenableBuilder
       body: ValueListenableBuilder<List<LogModel>>(
-        valueListenable: _controller.logsNotifier,
+        valueListenable: _controller.filteredLogs, // ← dengarkan filteredLogs untuk search
         builder: (context, currentLogs, child) {
-          if (currentLogs.isEmpty) {
-            return const Center(child: Text("Belum ada catatan."));
-          }
-          return ListView.builder(
-            itemCount: currentLogs.length,
-            itemBuilder: (context, index) {
-              final log = currentLogs[index];
-              return Card(
-                child: ListTile(
-                  leading: const Icon(Icons.note),
-                  title: Text(log.title),
-                  subtitle: Text(log.description),
-                  trailing: Wrap(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit, color: Colors.blue),
-                        onPressed: () =>
-                            _showEditLogDialog(index, log),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          // Tidak perlu setState() — ValueNotifier otomatis update UI
-                          _controller.removeLog(index);
-                        },
-                      ),
-                    ],
+          return Column(
+            children: [
+              // Search Bar
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  onChanged: (value) => _controller.searchLog(value),
+                  decoration: const InputDecoration(
+                    labelText: "Cari Catatan...",
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(),
                   ),
                 ),
-              );
-            },
+              ),
+              // Daftar catatan
+              Expanded(
+                child: currentLogs.isEmpty
+                    ? const Center(child: Text("Belum ada catatan."))
+                    : ListView.builder(
+                        itemCount: currentLogs.length,
+                        itemBuilder: (context, index) {
+                          final log = currentLogs[index];
+                          return Dismissible(
+                            key: Key(log.date), // identitas unik (timestamp)
+                            direction: DismissDirection.endToStart, // swipe kanan ke kiri
+                            background: Container(
+                              color: Colors.red,
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.only(right: 20),
+                              child: const Icon(Icons.delete, color: Colors.white),
+                            ),
+                            onDismissed: (direction) {
+                              _controller.removeLog(index);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Catatan dihapus")),
+                              );
+                            },
+                            child: Card(
+                              child: ListTile(
+                                leading: const Icon(Icons.note),
+                                title: Text(log.title),
+                                subtitle: Text(log.description),
+                                trailing: Wrap(
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.edit, color: Colors.blue),
+                                      onPressed: () => _showEditLogDialog(index, log),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete, color: Colors.red),
+                                      onPressed: () => _controller.removeLog(index),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
           );
         },
       ),

@@ -5,6 +5,7 @@ import 'models/log_model.dart';
 
 class LogController {
   final ValueNotifier<List<LogModel>> logsNotifier = ValueNotifier([]);
+  final ValueNotifier<List<LogModel>> filteredLogs = ValueNotifier([]);
   static const String _storageKey = 'user_logs_data';
 
   LogController() { loadFromDisk(); }
@@ -12,6 +13,7 @@ class LogController {
   void addLog(String title, String desc) {
     final newLog = LogModel(title: title, description: desc, date: DateTime.now().toString());
     logsNotifier.value = [...logsNotifier.value, newLog];
+    filteredLogs.value = logsNotifier.value; // sync filteredLogs
     saveToDisk();
   }
 
@@ -19,6 +21,7 @@ class LogController {
     final currentLogs = List<LogModel>.from(logsNotifier.value);
     currentLogs[index] = LogModel(title: title, description: desc, date: DateTime.now().toString());
     logsNotifier.value = currentLogs;
+    filteredLogs.value = logsNotifier.value; // sync filteredLogs
     saveToDisk();
   }
 
@@ -26,7 +29,19 @@ class LogController {
     final currentLogs = List<LogModel>.from(logsNotifier.value);
     currentLogs.removeAt(index);
     logsNotifier.value = currentLogs;
+    filteredLogs.value = logsNotifier.value; // sync filteredLogs
     saveToDisk();
+  }
+
+  // Pencarian — filter dari logsNotifier ke filteredLogs
+  void searchLog(String query) {
+    if (query.isEmpty) {
+      filteredLogs.value = logsNotifier.value;
+    } else {
+      filteredLogs.value = logsNotifier.value
+          .where((log) => log.title.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    }
   }
 
   Future<void> saveToDisk() async {
@@ -42,6 +57,6 @@ class LogController {
       final List decoded = jsonDecode(data);
       logsNotifier.value = decoded.map((e) => LogModel.fromMap(e)).toList();
     }
+    filteredLogs.value = logsNotifier.value; // inisialisasi filteredLogs
   }
 }
-
