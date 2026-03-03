@@ -42,7 +42,7 @@ class LoginController {
     // 3. Cek Password
     if (_users[username] == password) {
       // Login Sukses
-      _attemptCount = 0; // Reset percobaan
+      _attemptCount = 0; 
       return "OK";
     } else {
       // Login Gagal (Password Salah)
