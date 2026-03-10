@@ -1,0 +1,12 @@
+Analyzing logbook_app_071...                                    
+
+  error - 5 positional arguments expected by 'addLog', but 4 found - lib\features\logbook\log_editor_page.dart:49:37 - not_enough_positional_arguments
+  error - 4 positional arguments expected by 'updateLog', but 3 found - lib\features\logbook\log_editor_page.dart:56:29 - not_enough_positional_arguments
+warning - Unused import: 'package:logbook_app_071/services/access_control_service.dart' - lib\features\logbook\log_view.dart:5:8 - unused_import
+warning - Unused import: 'package:logbook_app_071/features/logbook/log_editor_page.dart' - lib\features\logbook\log_view.dart:6:8 - unused_import
+warning - Unused import: 'package:logbook_app_071/features/auth/login_view.dart' - lib\features\logbook\log_view.dart:8:8 - unused_import
+  error - The argument type 'String' can't be assigned to the parameter type 'DateTime'.  - lib\features\logbook\log_view.dart:587:70 - argument_type_not_assignable
+warning - Unused import: 'package:logbook_app_071/features/logbook/services/mongo_service.dart' - lib\services\sync_manager.dart:4:8 - unused_import
+warning - The value of the local variable 'syncedCount' isn't used - lib\services\sync_manager.dart:29:11 - unused_local_variable
+warning - The value of the local variable 'log' isn't used - lib\services\sync_manager.dart:31:16 - unused_local_variable
+
