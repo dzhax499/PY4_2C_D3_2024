@@ -24,6 +24,7 @@ class LogEditorPage extends StatefulWidget {
 class _LogEditorPageState extends State<LogEditorPage> {
   late TextEditingController _titleController;
   late TextEditingController _descController;
+  bool _isPublic = false;
 
   @override
   void initState() {
@@ -32,6 +33,7 @@ class _LogEditorPageState extends State<LogEditorPage> {
     _descController = TextEditingController(
       text: widget.log?.description ?? '',
     );
+    _isPublic = widget.log?.isPublic ?? false;
 
     // Listener agar Pratinjau terupdate otomatis
     _descController.addListener(() {
@@ -48,6 +50,7 @@ class _LogEditorPageState extends State<LogEditorPage> {
         'Pribadi',
         widget.currentUser['uid'],
         widget.currentUser['teamId'],
+        isPublic: _isPublic,
       );
     } else {
       // Update
@@ -56,6 +59,7 @@ class _LogEditorPageState extends State<LogEditorPage> {
         _titleController.text,
         _descController.text,
         widget.log?.category ?? 'Pribadi',
+        isPublic: _isPublic,
       );
     }
     Navigator.pop(context);
@@ -107,6 +111,16 @@ class _LogEditorPageState extends State<LogEditorPage> {
                         border: InputBorder.none,
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 10),
+                  SwitchListTile(
+                    title: const Text("Buat Publik"),
+                    subtitle: const Text("Bisa dilihat anggota tim lain"),
+                    value: _isPublic,
+                    activeColor: const Color(0xFFF5C400),
+                    onChanged: (val) {
+                      setState(() => _isPublic = val);
+                    },
                   ),
                 ],
               ),

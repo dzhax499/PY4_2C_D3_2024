@@ -48,8 +48,9 @@ class LogController {
     String desc,
     String category,
     String authorId,
-    String teamId,
-  ) async {
+    String teamId, {
+    bool isPublic = false,
+  }) async {
     final newLog = LogModel(
       id: ObjectId().oid, // Menggunakan .oid (String) untuk Hive
       title: title,
@@ -58,6 +59,7 @@ class LogController {
       date: DateTime.now().toIso8601String(),
       authorId: authorId,
       teamId: teamId,
+      isPublic: isPublic,
     );
 
     // ACTION 1: Simpan ke Hive (Instan)
@@ -81,7 +83,7 @@ class LogController {
 
   // ── UPDATE ────────────────────────────────────────────────────────────────
   Future<void> updateLog(
-      int index, String newTitle, String newDesc, String newCategory) async {
+      int index, String newTitle, String newDesc, String newCategory, {bool isPublic = false}) async {
     final currentLogs = List<LogModel>.from(logsNotifier.value);
     final oldLog = currentLogs[index];
 
@@ -93,6 +95,7 @@ class LogController {
       date: DateTime.now().toIso8601String(),
       authorId: oldLog.authorId,
       teamId: oldLog.teamId,
+      isPublic: isPublic,
     );
 
     // Update lokal (Hive & UI)

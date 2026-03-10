@@ -26,6 +26,9 @@ class LogModel {
   @HiveField(6)
   final String category;
 
+  @HiveField(7)
+  final bool isPublic;
+
   LogModel({
     this.id,
     required this.title,
@@ -34,6 +37,7 @@ class LogModel {
     required this.date,
     required this.authorId,
     required this.teamId,
+    this.isPublic = false, // Secara default Privat
   });
 
   Map<String, dynamic> toMap() => {
@@ -44,6 +48,7 @@ class LogModel {
     'date': date,
     'authorId': authorId,
     'teamId': teamId,
+    'isPublic': isPublic,
   };
 
   factory LogModel.fromMap(Map<String, dynamic> map) {
@@ -55,6 +60,7 @@ class LogModel {
       date: map['date'] ?? '',
       authorId: map['authorId'] ?? 'unknown_user', // Cegah error null
       teamId: map['teamId'] ?? 'no_team',
+      isPublic: map['isPublic'] ?? false,
     );
   }
 }

@@ -32,6 +32,7 @@ class _LogViewState extends State<LogView> {
   // ── Kategori ─────────────────────────────────────────────────────────────
   static const List<String> _categories = ['Pribadi', 'Pekerjaan', 'Urgent'];
   String _selectedCategory = 'Pribadi';
+  bool _isPublic = false;
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
 
@@ -192,6 +193,7 @@ class _LogViewState extends State<LogView> {
     _titleController.clear();
     _contentController.clear();
     _selectedCategory = 'Pribadi';
+    _isPublic = false;
 
     showDialog(
       context: context,
@@ -215,6 +217,16 @@ class _LogViewState extends State<LogView> {
                   Icons.description, maxLines: 3),
               const SizedBox(height: 12),
               _buildCategoryDropdown(setDialogState),
+              const SizedBox(height: 12),
+              SwitchListTile(
+                title: const Text("Buat Publik"),
+                subtitle: const Text("Bisa dilihat anggota tim lain"),
+                value: _isPublic,
+                activeColor: _accent,
+                onChanged: (val) {
+                  setDialogState(() => _isPublic = val);
+                },
+              ),
             ],
           ),
           actions: [
@@ -237,6 +249,7 @@ class _LogViewState extends State<LogView> {
                     _selectedCategory,
                     widget.currentUser['uid'],
                     widget.currentUser['teamId'],
+                    isPublic: _isPublic,
                   );
                   Navigator.pop(context);
                 }
@@ -254,6 +267,7 @@ class _LogViewState extends State<LogView> {
     _titleController.text   = log.title;
     _contentController.text = log.description;
     _selectedCategory       = log.category;
+    _isPublic               = log.isPublic;
 
     showDialog(
       context: context,
@@ -277,6 +291,16 @@ class _LogViewState extends State<LogView> {
                   Icons.description, maxLines: 3),
               const SizedBox(height: 12),
               _buildCategoryDropdown(setDialogState),
+              const SizedBox(height: 12),
+              SwitchListTile(
+                title: const Text("Buat Publik"),
+                subtitle: const Text("Bisa dilihat anggota tim lain"),
+                value: _isPublic,
+                activeColor: _accent,
+                onChanged: (val) {
+                  setDialogState(() => _isPublic = val);
+                },
+              ),
             ],
           ),
           actions: [
@@ -297,6 +321,7 @@ class _LogViewState extends State<LogView> {
                   _titleController.text,
                   _contentController.text,
                   _selectedCategory,
+                  isPublic: _isPublic,
                 );
                 Navigator.pop(context);
               },
@@ -460,6 +485,11 @@ class _LogViewState extends State<LogView> {
               valueListenable: _controller.logsNotifier,
               builder: (context, currentLogs, child) {
 
+                // HOMEWORK 5: Filter Visibilitas Privat/Publik
+                final displayLogs = currentLogs.where((log) {
+                  return log.authorId == widget.currentUser['uid'] || log.isPublic == true;
+                }).toList();
+
                 // 1. Loading state
                 if (_isLoading) {
                   return const Center(
@@ -478,7 +508,7 @@ class _LogViewState extends State<LogView> {
                 }
 
                 // 2. Empty state cloud
-                if (currentLogs.isEmpty) {
+                if (displayLogs.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -499,20 +529,17 @@ class _LogViewState extends State<LogView> {
                                 color: Colors.black87)),
                         const SizedBox(height: 8),
                         ElevatedButton.icon(
-                          onPressed: () {
-                            if (widget.currentUser['role'] == 'Ketua') {
+                          onPressed: () { 
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => LogEditorPage(
+                                  builder: (context) (
                                     controller: _controller,
                                     currentUser: widget.currentUser,
                                   ),
                                 ),
                               );
-                            } else {
-                              _showAddLogDialog();
-                            }
+                            
                           },
                           icon: const Icon(Icons.add),
                           label: const Text("Buat Catatan Pertama"),
@@ -570,7 +597,7 @@ class _LogViewState extends State<LogView> {
                           const Icon(Icons.cloud_done, size: 14, color: Colors.green),
                           const SizedBox(width: 4),
                           Text(
-                            "${currentLogs.length} catatan dari Atlas",
+                            "${displayLogs.length} catatan dari Atlas",
                             style: const TextStyle(color: Colors.grey, fontSize: 13),
                           ),
                           const Spacer(),
@@ -592,16 +619,24 @@ class _LogViewState extends State<LogView> {
                           physics: const AlwaysScrollableScrollPhysics(),
                           padding:
                               const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          itemCount: currentLogs.length,
-                          itemBuilder: (context, index) {
-                            final log = currentLogs[index];
+                          itemCount: displayLogs.length,
+                          itemBuilder: (context, displayIndex) {
+                            final log = displayLogs[displayIndex];
+                            final int realIndex = currentLogs.indexOf(log);
 
                             // ── HOMEWORK 3: Timestamp Indonesia ────────────
                             final relativeTime = _formatRelativeTime(DateTime.parse(log.date));
 
+                            // GATEKEEPER CHECK untuk fungsi SWIPE to Delete
+                            final bool canDelete = AccessControlService.canPerform(
+                              widget.currentUser['role'],
+                              AccessControlService.actionDelete,
+                              isOwner: log.authorId == widget.currentUser['uid'],
+                            );
+
                             return Dismissible(
                               key: Key(log.id ?? log.date),
-                              direction: DismissDirection.endToStart,
+                              direction: canDelete ? DismissDirection.endToStart : DismissDirection.none, // Kunci Swipe Akses
                               background: Container(
                                 margin: const EdgeInsets.symmetric(vertical: 6),
                                 decoration: BoxDecoration(
@@ -614,17 +649,26 @@ class _LogViewState extends State<LogView> {
                                     color: Colors.white, size: 28),
                               ),
                               onDismissed: (_) {
-                                _controller.removeLog(index);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content:
-                                        const Text("Catatan dihapus dari Cloud"),
-                                    backgroundColor: Colors.red.shade400,
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12)),
-                                  ),
-                                );
+                                if (canDelete) {
+                                  _controller.removeLog(realIndex);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: const Text("Catatan dihapus"),
+                                      backgroundColor: Colors.red.shade400,
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12)),
+                                    ),
+                                  );
+                                }
+                              },
+                              // (Klik item -> muncul tulisan unauthorized bila tak punya hak hapus di console/log)
+                              confirmDismiss: (direction) async {
+                                if (!canDelete) {
+                                   debugPrint("UNAUTHORIZED: Attempt to delete log denied for role ${widget.currentUser['role']}");
+                                   return false;
+                                }
+                                return true;
                               },
                               child: Container(
                                 margin: const EdgeInsets.symmetric(vertical: 6),
@@ -751,21 +795,17 @@ class _LogViewState extends State<LogView> {
                                                   size: 20,
                                                   color: Colors.black54),
                                               onPressed: () {
-                                                if (widget.currentUser['role'] == 'Ketua') {
                                                   Navigator.push(
                                                     context,
                                                     MaterialPageRoute(
                                                       builder: (context) => LogEditorPage(
                                                         log: log,
-                                                        index: index,
+                                                        index: realIndex,
                                                         controller: _controller,
                                                         currentUser: widget.currentUser,
                                                       ),
                                                     ),
                                                   );
-                                                } else {
-                                                  _showEditLogDialog(index, log);
-                                                }
                                               },
                                               constraints:
                                                   const BoxConstraints(),
@@ -783,8 +823,8 @@ class _LogViewState extends State<LogView> {
                                                   color:
                                                       Colors.red.shade400),
                                               onPressed: () =>
-                                                  _controller
-                                                      .removeLog(index),
+                                                _controller
+                                                      .removeLog(realIndex),
                                               constraints:
                                                   const BoxConstraints(),
                                               padding:
@@ -813,7 +853,7 @@ class _LogViewState extends State<LogView> {
           ? null
           : FloatingActionButton.extended(
               onPressed: () {
-                if (widget.currentUser['role'] == 'Ketua') {
+                if (widget.currentUser['role'] == 'Ketua' || widget.currentUser['role'] == 'Anggota') {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
