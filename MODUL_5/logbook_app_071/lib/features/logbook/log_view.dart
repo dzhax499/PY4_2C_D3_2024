@@ -7,6 +7,7 @@ import 'package:logbook_app_071/features/logbook/services/mongo_service.dart';
 import 'package:logbook_app_071/helpers/log_helper.dart';
 import 'package:logbook_app_071/services/access_control_service.dart';
 import 'package:logbook_app_071/features/logbook/log_editor_page.dart';
+import 'package:lottie/lottie.dart';
 class LogView extends StatefulWidget {
   final dynamic currentUser;
 
@@ -24,14 +25,15 @@ class _LogViewState extends State<LogView> {
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
+  final ValueNotifier<String> _searchNotifier = ValueNotifier('');
 
   // ── Tema Warna ───────────────────────────────────────────────────────────
   static const Color _black  = Color(0xFF000000);
   static const Color _accent = Color(0xFFF5C400);
 
   // ── Kategori ─────────────────────────────────────────────────────────────
-  static const List<String> _categories = ['Pribadi', 'Pekerjaan', 'Urgent'];
-  String _selectedCategory = 'Pribadi';
+  static const List<String> _categories = ['Mechanical', 'Electronic', 'Software', 'Pribadi', 'Pekerjaan', 'Urgent'];
+  String _selectedCategory = 'Mechanical';
   bool _isPublic = false;
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
@@ -151,6 +153,9 @@ class _LogViewState extends State<LogView> {
   // ── Helpers Kategori ──────────────────────────────────────────────────────
   Color _categoryColor(String category) {
     switch (category) {
+      case 'Mechanical': return Colors.green.shade50;
+      case 'Electronic': return Colors.blue.shade50;
+      case 'Software':   return Colors.purple.shade50;
       case 'Pekerjaan': return const Color(0xFFFFF9C4);
       case 'Urgent':    return const Color(0xFFFFEBEE);
       default:          return Colors.white;
@@ -159,6 +164,9 @@ class _LogViewState extends State<LogView> {
 
   IconData _categoryIcon(String category) {
     switch (category) {
+      case 'Mechanical': return Icons.precision_manufacturing;
+      case 'Electronic': return Icons.electric_bolt;
+      case 'Software':   return Icons.code;
       case 'Pekerjaan': return Icons.work_outline;
       case 'Urgent':    return Icons.priority_high;
       default:          return Icons.person_outline;
@@ -167,6 +175,9 @@ class _LogViewState extends State<LogView> {
 
   Color _categoryBorder(String category) {
     switch (category) {
+      case 'Mechanical': return Colors.green.shade400;
+      case 'Electronic': return Colors.blue.shade400;
+      case 'Software':   return Colors.purple.shade400;
       case 'Pekerjaan': return _accent;
       case 'Urgent':    return Colors.red.shade400;
       default:          return Colors.grey.shade400;
@@ -175,6 +186,9 @@ class _LogViewState extends State<LogView> {
 
   Color _categoryBadgeBg(String category) {
     switch (category) {
+      case 'Mechanical': return Colors.green.shade400;
+      case 'Electronic': return Colors.blue.shade400;
+      case 'Software':   return Colors.purple.shade400;
       case 'Pekerjaan': return _accent;
       case 'Urgent':    return Colors.red.shade400;
       default:          return Colors.grey.shade300;
@@ -481,14 +495,24 @@ class _LogViewState extends State<LogView> {
 
           // ── Content Area ───────────────────────────────────────────────────
           Expanded(
-            child: ValueListenableBuilder<List<LogModel>>(
-              valueListenable: _controller.logsNotifier,
-              builder: (context, currentLogs, child) {
+            child: ValueListenableBuilder<String>(
+              valueListenable: _searchNotifier,
+              builder: (context, searchQuery, child) {
+                return ValueListenableBuilder<List<LogModel>>(
+                  valueListenable: _controller.logsNotifier,
+                  builder: (context, currentLogs, child) {
 
-                // HOMEWORK 5: Filter Visibilitas Privat/Publik
-                final displayLogs = currentLogs.where((log) {
-                  return log.authorId == widget.currentUser['uid'] || log.isPublic == true;
-                }).toList();
+                    // HOMEWORK 5: Filter Visibilitas Privat/Publik
+                    final displayLogs = currentLogs.where((log) {
+                      final isVisible = log.authorId == widget.currentUser['uid'] || log.isPublic == true;
+                      if (searchQuery.isNotEmpty) {
+                        final query = searchQuery.toLowerCase();
+                        final matchesSearch = log.title.toLowerCase().contains(query) || 
+                                              log.description.toLowerCase().contains(query);
+                        return isVisible && matchesSearch;
+                      }
+                      return isVisible;
+                    }).toList();
 
                 // 1. Loading state
                 if (_isLoading) {
@@ -507,75 +531,20 @@ class _LogViewState extends State<LogView> {
                   );
                 }
 
-                // 2. Empty state cloud
-                if (displayLogs.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 100, height: 100,
-                          decoration: BoxDecoration(
-                            color: _accent.withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(Icons.cloud_off, size: 56, color: _accent),
-                        ),
-                        const SizedBox(height: 20),
-                        const Text("Belum ada catatan di Cloud.",
-                            style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87)),
-                        const SizedBox(height: 8),
-                        ElevatedButton.icon(
-                          onPressed: () { 
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) (
-                                    controller: _controller,
-                                    currentUser: widget.currentUser,
-                                  ),
-                                ),
-                              );
-                            
-                          },
-                          icon: const Icon(Icons.add),
-                          label: const Text("Buat Catatan Pertama"),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _black,
-                            foregroundColor: _accent,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                // 3. Data list — dibungkus RefreshIndicator (HOMEWORK 2)
+                // 2. Data list — dibungkus RefreshIndicator (HOMEWORK 2)
                 return Column(
                   children: [
-                    // Search Bar
+                    // Search Bar (Selalu Tampil)
                     Container(
                       color: _black,
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
                       child: TextField(
                         onChanged: (value) {
-                          if (value.isEmpty) {
-                            _controller.loadLogs(widget.currentUser['teamId']);
-                          } else {
-                            _controller.logsNotifier.value = currentLogs
-                                .where((l) =>
-                                    l.title.toLowerCase().contains(value.toLowerCase()))
-                                .toList();
-                          }
+                          _searchNotifier.value = value;
                         },
                         style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
-                          hintText: "Cari catatan...",
+                          hintText: "Cari berdasarkan judul atau isi...",
                           hintStyle: const TextStyle(color: Colors.white54),
                           prefixIcon: const Icon(Icons.search, color: _accent),
                           filled: true,
@@ -609,20 +578,76 @@ class _LogViewState extends State<LogView> {
                       ),
                     ),
 
-                    // ── HOMEWORK 2: RefreshIndicator + List ─────────────────
+                    // 3. Konten Utama (Empty State ATAU ListView)
                     Expanded(
-                      child: RefreshIndicator(
-                        onRefresh: _onRefresh,
-                        color: _accent,
-                        backgroundColor: _black,
-                        child: ListView.builder(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          itemCount: displayLogs.length,
-                          itemBuilder: (context, displayIndex) {
-                            final log = displayLogs[displayIndex];
-                            final int realIndex = currentLogs.indexOf(log);
+                      child: displayLogs.isEmpty
+                          ? Center(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Lottie.network(
+                                      'https://lottie.host/17e2c918-07d3-4674-814e-f8bc827bc582/KhyO51J8U6.json',
+                                      width: 250,
+                                      errorBuilder: (context, error, stackTrace) => Container(
+                                        width: 100, height: 100,
+                                        decoration: BoxDecoration(
+                                          color: _accent.withValues(alpha: 0.15),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(Icons.description, size: 56, color: _accent),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    Text(
+                                      searchQuery.isNotEmpty 
+                                        ? "Pencarian \"$searchQuery\" tidak ditemukan."
+                                        : "Belum ada aktivitas hari ini? Mulai catat kemajuan proyek Anda!",
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                            fontSize: 16,
+                                            height: 1.5,
+                                            color: Colors.black87)),
+                                    const SizedBox(height: 8),
+                                    if (searchQuery.isEmpty)
+                                      ElevatedButton.icon(
+                                        onPressed: () { 
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => LogEditorPage(
+                                                  controller: _controller,
+                                                  currentUser: widget.currentUser,
+                                                ),
+                                              ),
+                                            );
+                                        },
+                                        icon: const Icon(Icons.add),
+                                        label: const Text("Buat Catatan Pertama"),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: _black,
+                                          foregroundColor: _accent,
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(12)),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          : RefreshIndicator(
+                              onRefresh: _onRefresh,
+                              color: _accent,
+                              backgroundColor: _black,
+                              child: ListView.builder(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                itemCount: displayLogs.length,
+                                itemBuilder: (context, displayIndex) {
+                                  final log = displayLogs[displayIndex];
+                                  final int realIndex = currentLogs.indexOf(log);
 
                             // ── HOMEWORK 3: Timestamp Indonesia ────────────
                             final relativeTime = _formatRelativeTime(DateTime.parse(log.date));
@@ -844,8 +869,10 @@ class _LogViewState extends State<LogView> {
                   ],
                 );
               },
-            ),
-          ),
+            );
+          },
+        ),
+      ),
         ],
       ),
 

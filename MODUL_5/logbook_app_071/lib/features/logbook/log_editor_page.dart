@@ -25,6 +25,7 @@ class _LogEditorPageState extends State<LogEditorPage> {
   late TextEditingController _titleController;
   late TextEditingController _descController;
   bool _isPublic = false;
+  String _category = 'Mechanical';
 
   @override
   void initState() {
@@ -34,6 +35,9 @@ class _LogEditorPageState extends State<LogEditorPage> {
       text: widget.log?.description ?? '',
     );
     _isPublic = widget.log?.isPublic ?? false;
+    _category = ['Mechanical', 'Electronic', 'Software'].contains(widget.log?.category)
+        ? widget.log!.category
+        : 'Mechanical';
 
     // Listener agar Pratinjau terupdate otomatis
     _descController.addListener(() {
@@ -47,7 +51,7 @@ class _LogEditorPageState extends State<LogEditorPage> {
       widget.controller.addLog(
         _titleController.text,
         _descController.text,
-        'Pribadi',
+        _category,
         widget.currentUser['uid'],
         widget.currentUser['teamId'],
         isPublic: _isPublic,
@@ -58,7 +62,7 @@ class _LogEditorPageState extends State<LogEditorPage> {
         widget.index!,
         _titleController.text,
         _descController.text,
-        widget.log?.category ?? 'Pribadi',
+        _category,
         isPublic: _isPublic,
       );
     }
@@ -107,10 +111,28 @@ class _LogEditorPageState extends State<LogEditorPage> {
                       expands: true,
                       keyboardType: TextInputType.multiline,
                       decoration: const InputDecoration(
-                        hintText: "Tulis laporan dengan format Markdown...",
+                        hintText: "Tulis laporan dengan format Markdown...\n# Heading 1\n* Italic *\n** Bold **\n- List\n1. Numbered List\n> Blockquote\n[Link](https://example.com)",
                         border: InputBorder.none,
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 10),
+                  DropdownButtonFormField<String>(
+                    value: _category,
+                    decoration: const InputDecoration(labelText: 'Kategori'),
+                    items: ['Mechanical', 'Electronic', 'Software'].map((String category) {
+                      return DropdownMenuItem(
+                        value: category,
+                        child: Text(category),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          _category = newValue;
+                        });
+                      }
+                    },
                   ),
                   const SizedBox(height: 10),
                   SwitchListTile(
