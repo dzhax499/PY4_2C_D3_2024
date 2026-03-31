@@ -1,0 +1,30 @@
+﻿00:00 +0: loading D:/SEMESTER 4 TEKNIK INFORMATIKA/PROYEK_4_MOOBILE_DEV/GIT/PY4_2C_D3_2024/MODUL_6/logbook_app_001/test/module1_counter_test.dart
+00:00 +0: Module 1 - CounterController (with storage & step) initial value should be 0
+00:00 +1: Module 1 - CounterController (with storage & step) setStep should change step value
+00:00 +2: Module 1 - CounterController (with storage & step) setStep should ignore negative value
+00:00 +3: Module 1 - CounterController (with storage & step) increment should increase counter based on step
+00:00 +4: Module 1 - CounterController (with storage & step) decrement should decrease counter based on step
+00:00 +4 -1: Module 1 - CounterController (with storage & step) decrement should decrease counter based on step [E]
+  Expected: <0>
+    Actual: <2>
+  Expected 0 but got 2
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test\module1_counter_test.dart 77:7                 main.<fn>.<fn>
+  
+00:00 +4 -1: Module 1 - CounterController (with storage & step) decrement should not go below zero
+00:00 +5 -1: Module 1 - CounterController (with storage & step) reset should set counter to zero
+00:00 +5 -2: Module 1 - CounterController (with storage & step) reset should set counter to zero [E]
+  Expected: <0>
+    Actual: <1>
+  Expected 0 but got 1
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test\module1_counter_test.dart 103:7                main.<fn>.<fn>
+  
+00:00 +5 -2: Module 1 - CounterController (with storage & step) history should record actions
+00:00 +6 -2: Module 1 - CounterController (with storage & step) history should not exceed 5 items
+00:00 +7 -2: Module 1 - CounterController (with storage & step) counter should persist using SharedPreferences
+00:00 +8 -2: Some tests failed.
